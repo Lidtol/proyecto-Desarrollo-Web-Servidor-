@@ -2,7 +2,7 @@ package com.example.gestor.model;
 
 public class Proyecto {
 
-    private int id;
+    private Integer id;
     private String nombre;
     private String descripcion;
     private boolean activo;
@@ -11,7 +11,7 @@ public class Proyecto {
     public Proyecto() {
     }
 
-    public Proyecto(int id, String nombre, String descripcion, boolean activo, int numeroDeIncidencias) {
+    public Proyecto(Integer id, String nombre, String descripcion, boolean activo, int numeroDeIncidencias) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -19,11 +19,11 @@ public class Proyecto {
         this.numeroDeIncidencias = numeroDeIncidencias;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
