@@ -3,6 +3,7 @@ package com.example.gestor.model;
 public class Tarea {
 
     private Integer id;
+    private int proyectoId;
     private String titulo;
     private String prioridad;
     private boolean completada;
@@ -48,4 +49,12 @@ public class Tarea {
     public void setCompletada(boolean completada) {
         this.completada = completada;
     }
+
+    public int getProyectoId() {
+    return proyectoId;
+}
+
+public void setProyectoId(int proyectoId) {
+    this.proyectoId = proyectoId;
+}
 }

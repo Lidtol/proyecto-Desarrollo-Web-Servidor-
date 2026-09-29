@@ -1,6 +1,9 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
+import com.example.gestor.model.Tarea;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,22 +25,42 @@ import java.util.List;
 @RequestMapping("/proyectos")
 public class ProyectoController {
 
-    private final List<Proyecto> proyectos = new ArrayList<>();
+    private final List<Proyecto> proyectos;
+    private final List<Tarea> tareas;
+
+    public ProyectoController(MemoriaProyecto memoria) {
+        this.proyectos = memoria.getProyectos();
+        this.tareas = memoria.getTareas();
+    }
+
     private Integer siguienteId = 1;
 
-    @GetMapping
-    public List<Proyecto> lista(@RequestParam(name = "activo", required = false) Boolean activo) {
-        if (activo == null) {
-            return proyectos;
-        }
+    @GetMapping("/{id}/tareas")
+    public ResponseEntity<List<Tarea>> tareasDelProyecto(
+            @PathVariable(name = "id") int id) {
 
-        List<Proyecto> resultado = new ArrayList<>();
+        boolean existe = false;
+
         for (Proyecto proyecto : proyectos) {
-            if (proyecto.isActivo() == activo) {
-                resultado.add(proyecto);
+            if (proyecto.getId() == id) {
+                existe = true;
+                break;
             }
         }
-        return resultado;
+
+        if (!existe) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Tarea> resultado = new ArrayList<>();
+
+        for (Tarea tarea : tareas) {
+            if (tarea.getProyectoId() == id) {
+                resultado.add(tarea);
+            }
+        }
+
+        return ResponseEntity.ok(resultado);
     }
 
     @GetMapping("/{id}")
@@ -48,6 +71,21 @@ public class ProyectoController {
             }
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping
+    public List<Proyecto> lista(
+            @RequestParam(name = "activo", required = false) Boolean activo) {
+        if (activo == null) {
+            return proyectos;
+        }
+        List<Proyecto> resultado = new ArrayList<>();
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.isActivo() == activo) {
+                resultado.add(proyecto);
+            }
+        }
+        return resultado;
     }
 
     @PostMapping
@@ -104,6 +142,58 @@ public class ProyectoController {
                     proyecto.setNumeroDeIncidencias(cambios.getNumeroDeIncidencias());
                 }
                 return ResponseEntity.ok(proyecto);
+            }
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @PostMapping("/{id}/tareas")
+    public ResponseEntity<Tarea> crearTareaEnProyecto(
+            @PathVariable(name = "id") Integer id,
+            @RequestBody Tarea tarea) {
+
+        // comprobar que el proyecto existe
+        boolean existe = false;
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.getId().equals(id)) {
+                existe = true;
+                break;
+            }
+        }
+
+        if (!existe) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // asignar proyectoId y calcular id para la tarea
+        tarea.setProyectoId(id);
+        int siguienteTareaId = 1;
+        for (Tarea t : tareas) {
+            if (t.getId() != null && t.getId() >= siguienteTareaId) {
+                siguienteTareaId = t.getId() + 1;
+            }
+        }
+        tarea.setId(siguienteTareaId);
+        tareas.add(tarea);
+
+        URI ubicacion = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{tareaId}")
+                .buildAndExpand(tarea.getId())
+                .toUri();
+
+        return ResponseEntity.created(ubicacion).body(tarea);
+    }
+
+    @GetMapping("/{id}/tareas/{tareaId}")
+    public ResponseEntity<Tarea> detalleTareaEnProyecto(
+            @PathVariable(name = "id") Integer id,
+            @PathVariable(name = "tareaId") Integer tareaId) {
+
+        for (Tarea tarea : tareas) {
+            if (tarea.getId() != null && tarea.getId().equals(tareaId) && tarea.getProyectoId() == id) {
+                return ResponseEntity.ok(tarea);
             }
         }
 

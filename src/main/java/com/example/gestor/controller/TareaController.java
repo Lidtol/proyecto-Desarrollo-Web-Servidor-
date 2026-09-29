@@ -1,5 +1,6 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Tarea;
 
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/tareas")
+
+
+
 public class TareaController {
 
-    private final List<Tarea> tareas = new ArrayList<>();
+    private final List<Tarea> tareas;
+
+    public TareaController(MemoriaProyecto memoria) {
+    this.tareas = memoria.getTareas();
+}
+
     private Integer siguienteId = 1;
 
     @GetMapping
