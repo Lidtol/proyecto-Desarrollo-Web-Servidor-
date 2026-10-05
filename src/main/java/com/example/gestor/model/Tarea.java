@@ -7,6 +7,7 @@ public class Tarea {
     private String titulo;
     private String prioridad;
     private boolean completada;
+    private String notaInterna = "pendiente de revisión interna";
 
     public Tarea() {
     }
@@ -51,10 +52,14 @@ public class Tarea {
     }
 
     public int getProyectoId() {
-    return proyectoId;
-}
+        return proyectoId;
+    }
 
-public void setProyectoId(int proyectoId) {
-    this.proyectoId = proyectoId;
-}
+    public void setProyectoId(int proyectoId) {
+        this.proyectoId = proyectoId;
+    }
+
+    public String getNotaInterna() {
+        return notaInterna;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.dto.ProyectoResponse;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
@@ -64,32 +65,36 @@ public class ProyectoController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Proyecto> detalle(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<ProyectoResponse> detalle(@PathVariable(name = "id") Integer id) {
         for (Proyecto proyecto : proyectos) {
             if (proyecto.getId().equals(id)) {
-                return ResponseEntity.ok(proyecto);
+                return ResponseEntity.ok(ProyectoResponse.desde(proyecto));
             }
         }
         return ResponseEntity.notFound().build();
     }
 
     @GetMapping
-    public List<Proyecto> lista(
+    public List<ProyectoResponse> lista(
             @RequestParam(name = "activo", required = false) Boolean activo) {
         if (activo == null) {
-            return proyectos;
+            List<ProyectoResponse> resultado = new ArrayList<>();
+            for (Proyecto proyecto : proyectos) {
+                resultado.add(ProyectoResponse.desde(proyecto));
+            }
+            return resultado;
         }
-        List<Proyecto> resultado = new ArrayList<>();
+        List<ProyectoResponse> resultado = new ArrayList<>();
         for (Proyecto proyecto : proyectos) {
             if (proyecto.isActivo() == activo) {
-                resultado.add(proyecto);
+                resultado.add(ProyectoResponse.desde(proyecto));
             }
         }
         return resultado;
     }
 
     @PostMapping
-    public ResponseEntity<Proyecto> crear(@RequestBody Proyecto proyecto) {
+    public ResponseEntity<ProyectoResponse> crear(@RequestBody Proyecto proyecto) {
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
         proyectos.add(proyecto);
@@ -100,17 +105,17 @@ public class ProyectoController {
                 .buildAndExpand(proyecto.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(proyecto);
+        return ResponseEntity.created(ubicacion).body(ProyectoResponse.desde(proyecto));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Proyecto> actualizar(@PathVariable(name = "id") Integer id, @RequestBody Proyecto datos) {
+    public ResponseEntity<ProyectoResponse> actualizar(@PathVariable(name = "id") Integer id, @RequestBody Proyecto datos) {
         for (int i = 0; i < proyectos.size(); i++) {
             Proyecto proyecto = proyectos.get(i);
             if (proyecto.getId().equals(id)) {
                 datos.setId(id);
                 proyectos.set(i, datos);
-                return ResponseEntity.ok(datos);
+                return ResponseEntity.ok(ProyectoResponse.desde(datos));
             }
         }
         return ResponseEntity.notFound().build();
@@ -123,7 +128,7 @@ public class ProyectoController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Proyecto> modificar(
+    public ResponseEntity<ProyectoResponse> modificar(
             @PathVariable(name = "id") Integer id,
             @RequestBody ProyectoActualizacion cambios) {
 
@@ -141,7 +146,7 @@ public class ProyectoController {
                 if (cambios.getNumeroDeIncidencias() != null) {
                     proyecto.setNumeroDeIncidencias(cambios.getNumeroDeIncidencias());
                 }
-                return ResponseEntity.ok(proyecto);
+                return ResponseEntity.ok(ProyectoResponse.desde(proyecto));
             }
         }
 
@@ -198,5 +203,48 @@ public class ProyectoController {
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    public static class ProyectoActualizacion {
+
+        private String nombre;
+        private String descripcion;
+        private Boolean activo;
+        private Integer numeroDeIncidencias;
+
+        public ProyectoActualizacion() {
+        }
+
+        public String getNombre() {
+            return nombre;
+        }
+
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public String getDescripcion() {
+            return descripcion;
+        }
+
+        public void setDescripcion(String descripcion) {
+            this.descripcion = descripcion;
+        }
+
+        public Boolean getActivo() {
+            return activo;
+        }
+
+        public void setActivo(Boolean activo) {
+            this.activo = activo;
+        }
+
+        public Integer getNumeroDeIncidencias() {
+            return numeroDeIncidencias;
+        }
+
+        public void setNumeroDeIncidencias(Integer numeroDeIncidencias) {
+            this.numeroDeIncidencias = numeroDeIncidencias;
+        }
     }
 }

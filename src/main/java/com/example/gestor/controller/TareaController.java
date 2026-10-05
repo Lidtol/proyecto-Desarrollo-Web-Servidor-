@@ -1,5 +1,6 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.dto.TareaResponse;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Tarea;
 
@@ -36,25 +37,29 @@ public class TareaController {
     private Integer siguienteId = 1;
 
     @GetMapping
-    public List<Tarea> lista(
+    public List<TareaResponse> lista(
             @RequestParam(name = "completada", required = false) Boolean completada) {
         if (completada == null) {
-            return tareas;
+            List<TareaResponse> resultado = new ArrayList<>();
+            for (Tarea tarea : tareas) {
+                resultado.add(TareaResponse.desde(tarea));
+            }
+            return resultado;
         }
-        List<Tarea> resultado = new ArrayList<>();
+        List<TareaResponse> resultado = new ArrayList<>();
         for (Tarea tarea : tareas) {
             if (tarea.isCompletada() == completada) {
-                resultado.add(tarea);
+                resultado.add(TareaResponse.desde(tarea));
             }
         }
         return resultado;
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Tarea> detalle(@PathVariable(name = "id") int id) {
+public ResponseEntity<TareaResponse> detalle(@PathVariable(name = "id") int id) {
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
-                return ResponseEntity.ok(tarea);
+    return ResponseEntity.ok(TareaResponse.desde(tarea));
             }
         }
         return ResponseEntity.notFound().build();
@@ -71,7 +76,7 @@ public class TareaController {
 
 
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Tarea> crear(
+    public ResponseEntity<TareaResponse> crear(
             @RequestBody Tarea tarea) {
 
         tarea.setId(siguienteId);
@@ -84,11 +89,11 @@ public class TareaController {
                 .buildAndExpand(tarea.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(tarea);
+                return ResponseEntity.created(ubicacion).body(TareaResponse.desde(tarea));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tarea> actualizar(
+    public ResponseEntity<TareaResponse> actualizar(
             @PathVariable(name = "id") int id,
             @RequestBody Tarea datos) {
 
@@ -99,7 +104,7 @@ public class TareaController {
 
                 tareas.set(i, datos);
 
-                return ResponseEntity.ok(datos);
+                return ResponseEntity.ok(TareaResponse.desde(datos));
             }
         }
 
@@ -107,7 +112,7 @@ public class TareaController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Tarea> modificar(
+    public ResponseEntity<TareaResponse> modificar(
             @PathVariable(name = "id") int id,
             @RequestBody TareaActualizacion cambios) {
 
@@ -126,10 +131,44 @@ public class TareaController {
                     tarea.setCompletada(cambios.getCompletada());
                 }
 
-                return ResponseEntity.ok(tarea);
+                return ResponseEntity.ok(TareaResponse.desde(tarea));
             }
         }
 
         return ResponseEntity.notFound().build();
+    }
+
+    public static class TareaActualizacion {
+
+        private String titulo;
+        private String prioridad;
+        private Boolean completada;
+
+        public TareaActualizacion() {
+        }
+
+        public String getTitulo() {
+            return titulo;
+        }
+
+        public void setTitulo(String titulo) {
+            this.titulo = titulo;
+        }
+
+        public String getPrioridad() {
+            return prioridad;
+        }
+
+        public void setPrioridad(String prioridad) {
+            this.prioridad = prioridad;
+        }
+
+        public Boolean getCompletada() {
+            return completada;
+        }
+
+        public void setCompletada(Boolean completada) {
+            this.completada = completada;
+        }
     }
 }

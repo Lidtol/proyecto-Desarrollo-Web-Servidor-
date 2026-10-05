@@ -7,7 +7,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.gestor.memoria.MemoriaProyecto;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,6 +37,38 @@ class TareaControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.titulo").value("Título modificado"))
                 .andExpect(jsonPath("$.prioridad").value("alta"))
+                .andExpect(jsonPath("$.completada").value(false));
+    }
+
+    @Test
+    void putDevuelveTareaResponse() throws Exception {
+        mockMvc.perform(post("/tareas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Original\",\"prioridad\":\"alta\",\"completada\":false}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/tareas/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Actualizada\",\"prioridad\":\"media\",\"completada\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.titulo").value("Actualizada"))
+                .andExpect(jsonPath("$.prioridad").value("media"))
+                .andExpect(jsonPath("$.completada").value(true));
+    }
+
+    @Test
+    void getDevuelveTareaResponse() throws Exception {
+        mockMvc.perform(post("/tareas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Consulta\",\"prioridad\":\"baja\",\"completada\":false}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/tareas/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.titulo").value("Consulta"))
+                .andExpect(jsonPath("$.prioridad").value("baja"))
                 .andExpect(jsonPath("$.completada").value(false));
     }
 }
