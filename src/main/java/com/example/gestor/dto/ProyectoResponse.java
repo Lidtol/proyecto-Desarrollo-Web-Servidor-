@@ -6,7 +6,8 @@ public record ProyectoResponse(
         Integer id,
         String nombre,
         String descripcion,
-        boolean activo
+    boolean activo,
+    int numeroDeIncidencias
 ) {
 
     public static ProyectoResponse desde(Proyecto proyecto) {
@@ -14,7 +15,8 @@ public record ProyectoResponse(
                 proyecto.getId(),
                 proyecto.getNombre(),
                 proyecto.getDescripcion(),
-                proyecto.isActivo()
+        proyecto.isActivo(),
+        proyecto.getNumeroDeIncidencias()
         );
     }
 }

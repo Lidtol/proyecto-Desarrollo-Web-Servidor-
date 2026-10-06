@@ -1,6 +1,8 @@
 package com.example.gestor.dto;
 
+
 import com.example.gestor.model.Tarea;
+
 
 public record TareaResponse(
         int id,
