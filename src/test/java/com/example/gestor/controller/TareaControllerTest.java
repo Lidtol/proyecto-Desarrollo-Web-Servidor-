@@ -27,7 +27,7 @@ class TareaControllerTest {
     void patchPermiteActualizarSoloElTitulo() throws Exception {
         mockMvc.perform(post("/tareas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"titulo\":\"Original\",\"prioridad\":\"alta\",\"completada\":false}"))
+                        .content("{\"titulo\":\"Original\",\"prioridad\":\"alta\",\"proyectoId\":1,\"completada\":false}"))
             .andExpect(status().isCreated());
 
         mockMvc.perform(patch("/tareas/1")
@@ -44,12 +44,12 @@ class TareaControllerTest {
     void putDevuelveTareaResponse() throws Exception {
         mockMvc.perform(post("/tareas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"titulo\":\"Original\",\"prioridad\":\"alta\",\"completada\":false}"))
+                .content("{\"titulo\":\"Original\",\"prioridad\":\"alta\",\"proyectoId\":1,\"completada\":false}"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(put("/tareas/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"titulo\":\"Actualizada\",\"prioridad\":\"media\",\"completada\":true}"))
+                .content("{\"titulo\":\"Actualizada\",\"prioridad\":\"media\",\"proyectoId\":1,\"completada\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.titulo").value("Actualizada"))
@@ -61,7 +61,7 @@ class TareaControllerTest {
     void getDevuelveTareaResponse() throws Exception {
         mockMvc.perform(post("/tareas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"titulo\":\"Consulta\",\"prioridad\":\"baja\",\"completada\":false}"))
+                .content("{\"titulo\":\"Consulta\",\"prioridad\":\"baja\",\"proyectoId\":1,\"completada\":false}"))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/tareas/1"))

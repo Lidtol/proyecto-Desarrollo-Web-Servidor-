@@ -74,4 +74,30 @@ class ProyectoControllerTest {
                 .andExpect(jsonPath("$.activo").value(true))
                 .andExpect(jsonPath("$.numeroDeIncidencias").value(1));
             }
+
+    @Test
+    void postDevuelveBadRequestSiFaltaNombre() throws Exception {
+        mockMvc.perform(post("/proyectos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"descripcion\":\"Sin nombre\",\"activo\":true,\"numeroDeIncidencias\":2}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void postDevuelveBadRequestSiNombreEsDemasiadoCorto() throws Exception {
+        mockMvc.perform(post("/proyectos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"AB\",\"descripcion\":\"Corto\",\"activo\":true,\"numeroDeIncidencias\":2}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void postDevuelveBadRequestSiDescripcionSuperaLongitudMaxima() throws Exception {
+        String descripcionLarga = "a".repeat(501);
+
+        mockMvc.perform(post("/proyectos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Proyecto válido\",\"descripcion\":\"" + descripcionLarga + "\",\"activo\":true,\"numeroDeIncidencias\":2}"))
+                .andExpect(status().isBadRequest());
+    }
 }

@@ -1,10 +1,13 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.dto.ProyectoPatchRequest;
+import com.example.gestor.dto.ProyectoRequest;
 import com.example.gestor.dto.ProyectoResponse;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -94,7 +97,13 @@ public class ProyectoController {
     }
 
     @PostMapping
-    public ResponseEntity<ProyectoResponse> crear(@RequestBody Proyecto proyecto) {
+    public ResponseEntity<ProyectoResponse> crear(@Valid @RequestBody ProyectoRequest peticion) {
+        Proyecto proyecto = new Proyecto();
+        proyecto.setNombre(peticion.nombre());
+        proyecto.setDescripcion(peticion.descripcion());
+        proyecto.setActivo(peticion.activo());
+        proyecto.setNumeroDeIncidencias(peticion.numeroDeIncidencias());
+
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
         proyectos.add(proyecto);
@@ -109,7 +118,13 @@ public class ProyectoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProyectoResponse> actualizar(@PathVariable(name = "id") Integer id, @RequestBody Proyecto datos) {
+    public ResponseEntity<ProyectoResponse> actualizar(@PathVariable(name = "id") Integer id, @Valid @RequestBody ProyectoRequest peticion) {
+        Proyecto datos = new Proyecto();
+        datos.setNombre(peticion.nombre());
+        datos.setDescripcion(peticion.descripcion());
+        datos.setActivo(peticion.activo());
+        datos.setNumeroDeIncidencias(peticion.numeroDeIncidencias());
+
         for (int i = 0; i < proyectos.size(); i++) {
             Proyecto proyecto = proyectos.get(i);
             if (proyecto.getId().equals(id)) {
@@ -130,21 +145,21 @@ public class ProyectoController {
     @PatchMapping("/{id}")
     public ResponseEntity<ProyectoResponse> modificar(
             @PathVariable(name = "id") Integer id,
-            @RequestBody ProyectoActualizacion cambios) {
+            @Valid @RequestBody ProyectoPatchRequest cambios) {
 
         for (Proyecto proyecto : proyectos) {
             if (proyecto.getId().equals(id)) {
-                if (cambios.getNombre() != null) {
-                    proyecto.setNombre(cambios.getNombre());
+                if (cambios.nombre() != null) {
+                    proyecto.setNombre(cambios.nombre());
                 }
-                if (cambios.getDescripcion() != null) {
-                    proyecto.setDescripcion(cambios.getDescripcion());
+                if (cambios.descripcion() != null) {
+                    proyecto.setDescripcion(cambios.descripcion());
                 }
-                if (cambios.getActivo() != null) {
-                    proyecto.setActivo(cambios.getActivo());
+                if (cambios.activo() != null) {
+                    proyecto.setActivo(cambios.activo());
                 }
-                if (cambios.getNumeroDeIncidencias() != null) {
-                    proyecto.setNumeroDeIncidencias(cambios.getNumeroDeIncidencias());
+                if (cambios.numeroDeIncidencias() != null) {
+                    proyecto.setNumeroDeIncidencias(cambios.numeroDeIncidencias());
                 }
                 return ResponseEntity.ok(ProyectoResponse.desde(proyecto));
             }
@@ -205,46 +220,4 @@ public class ProyectoController {
         return ResponseEntity.notFound().build();
     }
 
-    public static class ProyectoActualizacion {
-
-        private String nombre;
-        private String descripcion;
-        private Boolean activo;
-        private Integer numeroDeIncidencias;
-
-        public ProyectoActualizacion() {
-        }
-
-        public String getNombre() {
-            return nombre;
-        }
-
-        public void setNombre(String nombre) {
-            this.nombre = nombre;
-        }
-
-        public String getDescripcion() {
-            return descripcion;
-        }
-
-        public void setDescripcion(String descripcion) {
-            this.descripcion = descripcion;
-        }
-
-        public Boolean getActivo() {
-            return activo;
-        }
-
-        public void setActivo(Boolean activo) {
-            this.activo = activo;
-        }
-
-        public Integer getNumeroDeIncidencias() {
-            return numeroDeIncidencias;
-        }
-
-        public void setNumeroDeIncidencias(Integer numeroDeIncidencias) {
-            this.numeroDeIncidencias = numeroDeIncidencias;
-        }
-    }
 }
