@@ -7,6 +7,7 @@ import com.example.gestor.model.Tarea;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import com.example.gestor.error.RecursoNoEncontradoException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -55,13 +56,13 @@ public class TareaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TareaResponse> detalle(@PathVariable(name = "id") int id) {
+    public TareaResponse detalle(@PathVariable(name = "id") int id) {
         for (Tarea tarea : tareas) {
             if (tarea.getId() == id) {
-                return ResponseEntity.ok(TareaResponse.desde(tarea));
+                return TareaResponse.desde(tarea);
             }
         }
-        return ResponseEntity.notFound().build();
+        throw new RecursoNoEncontradoException("tarea", id);
     }
 
     @DeleteMapping("/{id}")
