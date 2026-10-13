@@ -3,6 +3,7 @@ package com.example.gestor.controller;
 import com.example.gestor.dto.ProyectoPatchRequest;
 import com.example.gestor.dto.ProyectoRequest;
 import com.example.gestor.dto.ProyectoResponse;
+import com.example.gestor.error.ConflictoException;
 import com.example.gestor.memoria.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
@@ -38,6 +39,21 @@ public class ProyectoController {
     }
 
     private Integer siguienteId = 1;
+
+    private boolean existeNombreDuplicado(String nombre) {
+        if (nombre == null) {
+            return false;
+        }
+
+        String nombreNormalizado = nombre.trim();
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.getNombre() != null
+                    && proyecto.getNombre().equalsIgnoreCase(nombreNormalizado)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @GetMapping("/{id}/tareas")
     public ResponseEntity<List<Tarea>> tareasDelProyecto(
@@ -98,11 +114,16 @@ public class ProyectoController {
 
     @PostMapping
     public ResponseEntity<ProyectoResponse> crear(@Valid @RequestBody ProyectoRequest peticion) {
+        String nombre = peticion.nombre() == null ? null : peticion.nombre().trim();
+        if (existeNombreDuplicado(nombre)) {
+            throw new ConflictoException("Ya existe un proyecto con el nombre '" + nombre + "'");
+        }
+
         Proyecto proyecto = new Proyecto();
-        proyecto.setNombre(peticion.nombre());
+        proyecto.setNombre(nombre);
         proyecto.setDescripcion(peticion.descripcion());
-        proyecto.setActivo(peticion.activo());
-        proyecto.setNumeroDeIncidencias(peticion.numeroDeIncidencias());
+        proyecto.setActivo(Boolean.TRUE.equals(peticion.activo()));
+        proyecto.setNumeroDeIncidencias(peticion.numeroDeIncidencias() != null ? peticion.numeroDeIncidencias() : 0);
 
         proyecto.setId(siguienteId);
         siguienteId = siguienteId + 1;
@@ -119,11 +140,23 @@ public class ProyectoController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProyectoResponse> actualizar(@PathVariable(name = "id") Integer id, @Valid @RequestBody ProyectoRequest peticion) {
+        String nombre = peticion.nombre() == null ? null : peticion.nombre().trim();
+        for (Proyecto proyecto : proyectos) {
+            if (proyecto.getId().equals(id)) {
+                if (nombre != null
+                        && (proyecto.getNombre() == null || !proyecto.getNombre().equalsIgnoreCase(nombre))
+                        && existeNombreDuplicado(nombre)) {
+                    throw new ConflictoException("Ya existe un proyecto con el nombre '" + nombre + "'");
+                }
+                break;
+            }
+        }
+
         Proyecto datos = new Proyecto();
-        datos.setNombre(peticion.nombre());
+        datos.setNombre(nombre);
         datos.setDescripcion(peticion.descripcion());
-        datos.setActivo(peticion.activo());
-        datos.setNumeroDeIncidencias(peticion.numeroDeIncidencias());
+        datos.setActivo(Boolean.TRUE.equals(peticion.activo()));
+        datos.setNumeroDeIncidencias(peticion.numeroDeIncidencias() != null ? peticion.numeroDeIncidencias() : 0);
 
         for (int i = 0; i < proyectos.size(); i++) {
             Proyecto proyecto = proyectos.get(i);
@@ -150,7 +183,12 @@ public class ProyectoController {
         for (Proyecto proyecto : proyectos) {
             if (proyecto.getId().equals(id)) {
                 if (cambios.nombre() != null) {
-                    proyecto.setNombre(cambios.nombre());
+                    String nombre = cambios.nombre().trim();
+                    if ((proyecto.getNombre() == null || !proyecto.getNombre().equalsIgnoreCase(nombre))
+                            && existeNombreDuplicado(nombre)) {
+                        throw new ConflictoException("Ya existe un proyecto con el nombre '" + nombre + "'");
+                    }
+                    proyecto.setNombre(nombre);
                 }
                 if (cambios.descripcion() != null) {
                     proyecto.setDescripcion(cambios.descripcion());

@@ -1,11 +1,12 @@
 package com.example.gestor.controller;
 
+import com.example.gestor.error.ManejadorDeErrores;
+import com.example.gestor.memoria.MemoriaProyecto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import com.example.gestor.memoria.MemoriaProyecto;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -20,7 +21,9 @@ class ProyectoControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new ProyectoController(new MemoriaProyecto())).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new ProyectoController(new MemoriaProyecto()))
+                .setControllerAdvice(new ManejadorDeErrores())
+                .build();
     }
 
     @Test
@@ -74,6 +77,19 @@ class ProyectoControllerTest {
                 .andExpect(jsonPath("$.activo").value(true))
                 .andExpect(jsonPath("$.numeroDeIncidencias").value(1));
             }
+
+    @Test
+    void postDevuelveConflictSiElNombreYaExiste() throws Exception {
+        mockMvc.perform(post("/proyectos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Duplicado\",\"descripcion\":\"Base\",\"activo\":true,\"numeroDeIncidencias\":1}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/proyectos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Duplicado\",\"descripcion\":\"Otro\",\"activo\":false,\"numeroDeIncidencias\":2}"))
+                .andExpect(status().isConflict());
+    }
 
     @Test
     void postDevuelveBadRequestSiFaltaNombre() throws Exception {
