@@ -1,22 +1,14 @@
 package com.example.gestor.dto;
 
-import com.example.gestor.model.Proyecto;
+import java.time.LocalDate;
 
 public record ProyectoResponse(
-        Integer id,
+        int id,
         String nombre,
         String descripcion,
-    boolean activo,
-    int numeroDeIncidencias
+        boolean activo,
+        int numeroDeIncidencias,
+        LocalDate fechaInicio,
+        LocalDate fechaFin
 ) {
-
-    public static ProyectoResponse desde(Proyecto proyecto) {
-        return new ProyectoResponse(
-                proyecto.getId(),
-                proyecto.getNombre(),
-                proyecto.getDescripcion(),
-        proyecto.isActivo(),
-        proyecto.getNumeroDeIncidencias()
-        );
-    }
 }
