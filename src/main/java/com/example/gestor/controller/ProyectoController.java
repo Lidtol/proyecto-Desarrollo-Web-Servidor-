@@ -4,13 +4,13 @@ import com.example.gestor.dto.ProyectoPatchRequest;
 import com.example.gestor.dto.ProyectoRequest;
 import com.example.gestor.dto.ProyectoResponse;
 import com.example.gestor.dto.TareaResponse;
-import com.example.gestor.error.ConflictoException;
-import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.mapper.ProyectoMapper;
 import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.model.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
-import com.example.gestor.model.Tarea;
+import com.example.gestor.repository.ProyectoRepository;
+import com.example.gestor.repository.TareaRepository;
+import com.example.gestor.service.ProyectoService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -27,119 +27,69 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/proyectos")
 public class ProyectoController {
 
-    private final List<Proyecto> proyectos;
-    private final List<Tarea> tareas;
-    private int siguienteId = 1;
+    private final ProyectoService servicio;
 
     public ProyectoController(MemoriaProyecto memoria) {
-        this.proyectos = memoria.getProyectos();
-        this.tareas = memoria.getTareas();
+        this.servicio = new ProyectoService(
+                new ProyectoRepository(memoria), new TareaRepository(memoria));
     }
 
     @GetMapping
     public List<ProyectoResponse> lista(
             @RequestParam(name = "activo", required = false) Boolean activo) {
-        List<Proyecto> seleccion = new ArrayList<>();
-        for (Proyecto proyecto : proyectos) {
-            if (activo == null || proyecto.isActivo() == activo) {
-                seleccion.add(proyecto);
-            }
-        }
-        return ProyectoMapper.aRespuestas(seleccion);
+        return ProyectoMapper.aRespuestas(servicio.listar(activo));
     }
 
     @GetMapping("/{id}")
     public ProyectoResponse detalle(@PathVariable(name = "id") int id) {
-        return ProyectoMapper.aRespuesta(buscar(id));
+        return ProyectoMapper.aRespuesta(servicio.obtener(id));
     }
 
     @PostMapping
     public ResponseEntity<ProyectoResponse> crear(@Valid @RequestBody ProyectoRequest peticion) {
-        Proyecto proyecto = ProyectoMapper.aModelo(peticion);
-        comprobarNombreLibre(proyecto.getNombre(), null);
-
-        proyecto.setId(siguienteId);
-        siguienteId = siguienteId + 1;
-        proyectos.add(proyecto);
+        Proyecto creado = servicio.crear(ProyectoMapper.aModelo(peticion));
 
         URI ubicacion = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(proyecto.getId())
+                .buildAndExpand(creado.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(ProyectoMapper.aRespuesta(proyecto));
+        return ResponseEntity.created(ubicacion).body(ProyectoMapper.aRespuesta(creado));
     }
 
     @PutMapping("/{id}")
     public ProyectoResponse sustituir(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody ProyectoRequest peticion) {
-        Proyecto actual = buscar(id);
-        Proyecto nuevo = ProyectoMapper.aModelo(peticion);
-        comprobarNombreLibre(nuevo.getNombre(), id);
-
-        nuevo.setId(id);
-        proyectos.set(proyectos.indexOf(actual), nuevo);
-        return ProyectoMapper.aRespuesta(nuevo);
+        return ProyectoMapper.aRespuesta(
+                servicio.reemplazar(id, ProyectoMapper.aModelo(peticion)));
     }
 
     @PatchMapping("/{id}")
     public ProyectoResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody ProyectoPatchRequest cambios) {
-        Proyecto proyecto = buscar(id);
-        if (cambios.nombre() != null) {
-            comprobarNombreLibre(cambios.nombre().trim(), id);
-        }
-        ProyectoMapper.aplicarCambios(proyecto, cambios);
-        return ProyectoMapper.aRespuesta(proyecto);
+        Proyecto modificado = servicio.modificar(
+                id, cambios.nombre(), cambios.descripcion(),
+                cambios.activo(), cambios.numeroDeIncidencias());
+        return ProyectoMapper.aRespuesta(modificado);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable(name = "id") int id) {
-        proyectos.removeIf(proyecto -> proyecto.getId() == id);
+        servicio.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/tareas")
     public List<TareaResponse> tareasDelProyecto(@PathVariable(name = "id") int id) {
-        buscar(id);
-
-        List<Tarea> seleccion = new ArrayList<>();
-        for (Tarea tarea : tareas) {
-            if (tarea.getProyectoId() == id) {
-                seleccion.add(tarea);
-            }
-        }
-        return TareaMapper.aRespuestas(seleccion);
-    }
-
-    private Proyecto buscar(int id) {
-        for (Proyecto proyecto : proyectos) {
-            if (proyecto.getId() == id) {
-                return proyecto;
-            }
-        }
-        throw new RecursoNoEncontradoException("proyecto", id);
-    }
-
-    /** idPropio: el proyecto que se está modificando (null en un alta), que no cuenta como duplicado. */
-    private void comprobarNombreLibre(String nombre, Integer idPropio) {
-        for (Proyecto proyecto : proyectos) {
-            boolean esOtro = idPropio == null || proyecto.getId() != idPropio.intValue();
-            if (esOtro && proyecto.getNombre() != null
-                    && proyecto.getNombre().equalsIgnoreCase(nombre)) {
-                throw new ConflictoException(
-                        "Ya existe un proyecto con el nombre '" + nombre + "': elige otro nombre");
-            }
-        }
+        return TareaMapper.aRespuestas(servicio.tareasDelProyecto(id));
     }
 }
