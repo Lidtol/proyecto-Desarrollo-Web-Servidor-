@@ -3,10 +3,11 @@ package com.example.gestor.controller;
 import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
-import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.model.MemoriaProyecto;
 import com.example.gestor.model.Tarea;
+import com.example.gestor.repository.TareaRepository;
+import com.example.gestor.service.TareaService;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -23,87 +24,63 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/tareas")
 public class TareaController {
 
-    private final List<Tarea> tareas;
-    private int siguienteId = 1;
+    private final TareaService servicio;
 
+    // Se mantiene el constructor con MemoriaProyecto: Spring lo sigue inyectando
+    // y TareaControllerTest sigue compilando sin tocarlo.
     public TareaController(MemoriaProyecto memoria) {
-        this.tareas = memoria.getTareas();
+        this.servicio = new TareaService(new TareaRepository(memoria));
     }
 
     @GetMapping
     public List<TareaResponse> lista(
             @RequestParam(name = "completada", required = false) Boolean completada) {
-        List<Tarea> seleccion = new ArrayList<>();
-        for (Tarea tarea : tareas) {
-            if (completada == null || tarea.isCompletada() == completada) {
-                seleccion.add(tarea);
-            }
-        }
-        return TareaMapper.aRespuestas(seleccion);
+        return TareaMapper.aRespuestas(servicio.listar(completada));
     }
 
     @GetMapping("/{id}")
     public TareaResponse detalle(@PathVariable(name = "id") int id) {
-        return TareaMapper.aRespuesta(buscar(id));
+        return TareaMapper.aRespuesta(servicio.obtener(id));
     }
 
     @PostMapping
     public ResponseEntity<TareaResponse> crear(@Valid @RequestBody TareaRequest peticion) {
-        Tarea tarea = TareaMapper.aModelo(peticion);
-
-        tarea.setId(siguienteId);
-        siguienteId = siguienteId + 1;
-        tareas.add(tarea);
+        Tarea creada = servicio.crear(TareaMapper.aModelo(peticion));
 
         URI ubicacion = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(tarea.getId())
+                .buildAndExpand(creada.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(tarea));
+        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(creada));
     }
 
     @PutMapping("/{id}")
     public TareaResponse sustituir(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaRequest peticion) {
-        Tarea actual = buscar(id);
-        Tarea nueva = TareaMapper.aModelo(peticion);
-
-        nueva.setId(id);
-        tareas.set(tareas.indexOf(actual), nueva);
-        return TareaMapper.aRespuesta(nueva);
+        return TareaMapper.aRespuesta(servicio.reemplazar(id, TareaMapper.aModelo(peticion)));
     }
 
     @PatchMapping("/{id}")
     public TareaResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaPatchRequest cambios) {
-        Tarea tarea = buscar(id);
-        TareaMapper.aplicarCambios(tarea, cambios);
-        return TareaMapper.aRespuesta(tarea);
+        Tarea modificada = servicio.modificar(
+                id, cambios.titulo(), cambios.prioridad(), cambios.proyectoId(), cambios.completada());
+        return TareaMapper.aRespuesta(modificada);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable(name = "id") int id) {
-        tareas.removeIf(tarea -> tarea.getId() == id);
+        servicio.eliminar(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Tarea buscar(int id) {
-        for (Tarea tarea : tareas) {
-            if (tarea.getId() == id) {
-                return tarea;
-            }
-        }
-        throw new RecursoNoEncontradoException("tarea", id);
     }
 }
