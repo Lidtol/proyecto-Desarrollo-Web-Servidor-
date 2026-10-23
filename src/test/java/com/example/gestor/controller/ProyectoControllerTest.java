@@ -1,7 +1,7 @@
 package com.example.gestor.controller;
 
 import com.example.gestor.error.ManejadorDeErrores;
-import com.example.gestor.memoria.MemoriaProyecto;
+import com.example.gestor.model.MemoriaProyecto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;

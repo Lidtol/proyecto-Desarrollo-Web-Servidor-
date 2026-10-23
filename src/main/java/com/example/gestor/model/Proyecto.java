@@ -7,6 +7,8 @@ public class Proyecto {
     private String descripcion;
     private boolean activo;
     private int numeroDeIncidencias;
+    private java.time.LocalDate fechaInicio;
+    private java.time.LocalDate fechaFin;
 
     public Proyecto() {
     }
@@ -49,6 +51,22 @@ public class Proyecto {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public java.time.LocalDate getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(java.time.LocalDate fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public java.time.LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(java.time.LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
     }
 
     public int getNumeroDeIncidencias() {

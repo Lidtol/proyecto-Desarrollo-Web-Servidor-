@@ -1,7 +1,5 @@
-package com.example.gestor.memoria;
+package com.example.gestor.model;
 
-import com.example.gestor.model.Proyecto;
-import com.example.gestor.model.Tarea;
 
 import java.util.ArrayList;
 import java.util.List;

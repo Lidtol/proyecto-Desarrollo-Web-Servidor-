@@ -9,13 +9,13 @@ public class FechasCoherentesValidator
 
     @Override
     public boolean isValid(ProyectoRequest entrada, ConstraintValidatorContext contexto) {
-        if (entrada == null || entrada.getFechaInicio() == null || entrada.getFechaFin() == null) {
+        if (entrada == null || entrada.fechaInicio() == null || entrada.fechaFin() == null) {
             return true; // Si alguna no viene, la obligatoriedad se delega a @NotNull.
         }
 
         // Intentamos comparar de forma genérica si los objetos son Comparable.
-        Object fechaFin = entrada.getFechaFin();
-        Object fechaInicio = entrada.getFechaInicio();
+        Object fechaFin = entrada.fechaFin();
+        Object fechaInicio = entrada.fechaInicio();
 
         if (fechaFin instanceof Comparable && fechaInicio != null) {
             try {

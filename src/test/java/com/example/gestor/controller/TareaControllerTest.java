@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import com.example.gestor.memoria.MemoriaProyecto;
+import com.example.gestor.error.ManejadorDeErrores;
+import com.example.gestor.model.MemoriaProyecto;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -20,7 +21,9 @@ class TareaControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new TareaController(new MemoriaProyecto())).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new TareaController(new MemoriaProyecto()))
+                .setControllerAdvice(new ManejadorDeErrores())
+                .build();
     }
 
     @Test
@@ -69,6 +72,7 @@ class TareaControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.titulo").value("Consulta"))
                 .andExpect(jsonPath("$.prioridad").value("baja"))
+                .andExpect(jsonPath("$.proyectoId").value(1))
                 .andExpect(jsonPath("$.completada").value(false));
     }
 }

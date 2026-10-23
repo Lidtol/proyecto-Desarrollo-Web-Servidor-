@@ -52,3 +52,64 @@ La aplicación se ejecuta en el puerto `8080`.
 * Un filtro que no encuentra coincidencias devuelve un array vacío `[]`.
 * Al quitar el filtro se recuperan todos los registros existentes.
 * Las operaciones de las dos entidades se comprueban mediante las peticiones de la práctica.
+
+
+## 1. Campos que quedan fuera de cada DTO
+
+| DTO | Fuera | Por qué |
+|-----|-------|---------|
+| `ProyectoRequest` / `TareaRequest` (alta y sustitución) | `id` | Lo asigna el servidor; si lo aceptara, el cliente podría pisar el de otro recurso. |
+| `TareaRequest`, `TareaPatchRequest` | `notaInterna` | Es de uso interno y el cliente no debe poder escribirla. |
+| `TareaResponse` | `notaInterna` | Dato interno: no forma parte del contrato. |
+| `ProyectoPatchRequest` | `fechaInicio`, `fechaFin` | La regla de coherencia compara las dos juntas y un PATCH solo trae una parte; las fechas se cambian con PUT. |
+
+`ProyectoRequest` y `ProyectoResponse` incluyen `fechaInicio` y `fechaFin`: se validan, se guardan y se devuelven
+(antes se descartaban). Los DTO de entrada recortan espacios de `nombre` y `titulo` **antes** de validar, para que
+`"  ab  "` no pase `@Size` y se guarde como `"ab"`.
+
+## 2. Anotaciones de validación propias
+
+- `@FechasCoherentes` (a nivel de clase, en `ProyectoRequest`): exige `fechaFin` ≥ `fechaInicio`. `@Pattern`
+  no puede resolverlo porque trabaja sobre **un solo campo** y como texto; aquí hay que comparar dos campos
+  entre sí. El error se asocia a `fechaFin` para que el cliente sepa qué corregir.
+- `@PrioridadValida` (en `TareaRequest` y `TareaPatchRequest`): admite `baja`, `media` o `alta`. Aquí sí
+  habría valido `@Pattern("baja|media|alta")`; la anotación propia se justifica porque la lista vive en un
+  único sitio, el mensaje es el mismo en POST, PUT y PATCH, y mañana la lista puede salir de un catálogo
+  (UD5) sin tocar los DTO.
+
+## 3. Formato de error
+
+Todos los errores usan `ProblemDetail` (RFC 9457, `application/problem+json`) con `title`, `status`,
+`detail` en español e `instance` (la ruta pedida), más `momento`; los de validación añaden `invalidParams`
+con `campo` y `motivo`. El único sitio que construye errores es `ManejadorDeErrores`, que además cubre los
+que lanza Spring antes de llegar a un controlador (405, 415, ruta inexistente, id no numérico). El 500
+responde un texto fijo y deja el detalle solo en el log.
+
+**Campo que añadiría para depurar:** un identificador de error (`idError`, un UUID) que aparezca en la
+respuesta **y** en la línea del log. Hoy el 500 no cuenta nada hacia fuera (correcto), pero eso significa que
+si un cliente reporta un fallo no hay forma de enlazar su respuesta con el stacktrace. Con el id, el cliente
+copia un valor y tú lo buscas en el log sin filtrar por hora.
+
+## 4. El caso que responde 409
+
+Crear o renombrar un proyecto con un nombre que ya existe (sin distinguir mayúsculas ni espacios en los
+extremos): `POST`, `PUT` y `PATCH /proyectos`. No es un **400** porque la petición está bien formada y cumple
+todas las reglas de validación: lo mismo con otro nombre funcionaría, el problema es el estado actual del
+servidor. No es un **404** porque el recurso al que se dirige la petición existe (o es la colección). Un 409
+dice exactamente eso: «tu petición es válida, pero choca con lo que ya hay». Conservar el propio nombre en un
+PUT no es conflicto.
+
+## 5. Por qué la API se queda en el nivel 2
+
+Ver el criterio 10 de `auditoria-rest.md`: la hipermedia añade complejidad al servidor que muy pocos clientes
+aprovechan; con un único cliente que conoce las rutas, el coste supera al beneficio. Es una decisión de coste
+y beneficio tomada a conciencia.
+
+## Limitaciones conocidas (el backend sigue en memoria hasta la UD5)
+
+- Todo se pierde al reiniciar; no hay persistencia hasta PostgreSQL (UD5).
+- Los controladores guardan los datos, generan ids, filtran y aplican reglas: se separa en capas con un
+  `service` en la UD4.
+- No se comprueba que el `proyectoId` de una tarea exista, y borrar un proyecto no toca sus tareas: la regla
+  «el proyecto debe existir» aún no tiene sitio (UD4).
+- Las pruebas automáticas existentes usan MockMvc; aún no hay tests de la lógica sin servidor (UD4).
