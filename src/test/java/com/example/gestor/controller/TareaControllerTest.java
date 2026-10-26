@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.example.gestor.error.ManejadorDeErrores;
+import com.example.gestor.model.Proyecto;
 import com.example.gestor.repository.ProyectoRepositorioEnMemoria;
 import com.example.gestor.repository.TareaRepositorioEnMemoria;
 import com.example.gestor.service.ProyectoService;
@@ -24,7 +25,9 @@ class TareaControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new TareaController(new TareaService(new TareaRepositorioEnMemoria())))
+        ProyectoRepositorioEnMemoria proyectos = new ProyectoRepositorioEnMemoria();
+        proyectos.save(new Proyecto(null, "Base", "", true, 0));
+        mockMvc = MockMvcBuilders.standaloneSetup(new TareaController(new TareaService(new TareaRepositorioEnMemoria(), proyectos)))
                 .setControllerAdvice(new ManejadorDeErrores())
                 .build();
     }

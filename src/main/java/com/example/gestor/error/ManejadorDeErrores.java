@@ -45,8 +45,8 @@ public class ManejadorDeErrores extends ResponseEntityExceptionHandler {
         return responder(ex, HttpStatus.NOT_FOUND, ex.getMessage(), peticion);
     }
 
-    @ExceptionHandler(ConflictoException.class)
-    public ResponseEntity<Object> conflicto(ConflictoException ex, WebRequest peticion) {
+    @ExceptionHandler(ReglaDeNegocioException.class)
+    public ResponseEntity<Object> reglaIncumplida(ReglaDeNegocioException ex, WebRequest peticion) {
         return responder(ex, HttpStatus.CONFLICT, ex.getMessage(), peticion);
     }
 
@@ -116,7 +116,7 @@ public class ManejadorDeErrores extends ResponseEntityExceptionHandler {
 
         // Las excepciones nuestras ya traen su detalle en español.
         if (ex instanceof RecursoNoEncontradoException
-                || ex instanceof ConflictoException
+                || ex instanceof ReglaDeNegocioException
                 || ex instanceof MethodArgumentNotValidException) {
             return;
         }

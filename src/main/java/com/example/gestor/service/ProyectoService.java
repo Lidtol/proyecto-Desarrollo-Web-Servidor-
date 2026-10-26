@@ -1,7 +1,7 @@
 package com.example.gestor.service;
 
 import com.example.gestor.dto.ProyectoPatchRequest;
-import com.example.gestor.error.ConflictoException;
+import com.example.gestor.error.ReglaDeNegocioException;
 import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.mapper.ProyectoMapper;
 import com.example.gestor.model.Proyecto;
@@ -82,7 +82,7 @@ public class ProyectoService {
             boolean esOtro = idPropio == null || proyecto.getId() != idPropio.intValue();
             if (esOtro && proyecto.getNombre() != null
                     && proyecto.getNombre().equalsIgnoreCase(nombre)) {
-                throw new ConflictoException(
+                throw new ReglaDeNegocioException(
                         "Ya existe un proyecto con el nombre '" + nombre + "': elige otro nombre");
             }
         }
