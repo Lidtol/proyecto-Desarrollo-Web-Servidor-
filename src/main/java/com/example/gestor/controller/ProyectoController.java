@@ -6,10 +6,7 @@ import com.example.gestor.dto.ProyectoResponse;
 import com.example.gestor.dto.TareaResponse;
 import com.example.gestor.mapper.ProyectoMapper;
 import com.example.gestor.mapper.TareaMapper;
-import com.example.gestor.model.MemoriaProyecto;
 import com.example.gestor.model.Proyecto;
-import com.example.gestor.repository.ProyectoRepository;
-import com.example.gestor.repository.TareaRepository;
 import com.example.gestor.service.ProyectoService;
 
 import jakarta.validation.Valid;
@@ -35,9 +32,8 @@ public class ProyectoController {
 
     private final ProyectoService servicio;
 
-    public ProyectoController(MemoriaProyecto memoria) {
-        this.servicio = new ProyectoService(
-                new ProyectoRepository(memoria), new TareaRepository(memoria));
+    public ProyectoController(ProyectoService servicio) {
+        this.servicio = servicio;
     }
 
     @GetMapping
@@ -48,38 +44,34 @@ public class ProyectoController {
 
     @GetMapping("/{id}")
     public ProyectoResponse detalle(@PathVariable(name = "id") int id) {
-        return ProyectoMapper.aRespuesta(servicio.obtener(id));
+        return ProyectoMapper.aRespuesta(servicio.buscar(id));
     }
 
     @PostMapping
     public ResponseEntity<ProyectoResponse> crear(@Valid @RequestBody ProyectoRequest peticion) {
-        Proyecto creado = servicio.crear(ProyectoMapper.aModelo(peticion));
+        Proyecto proyecto = servicio.crear(ProyectoMapper.aModelo(peticion));
 
         URI ubicacion = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(creado.getId())
+                .buildAndExpand(proyecto.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(ProyectoMapper.aRespuesta(creado));
+        return ResponseEntity.created(ubicacion).body(ProyectoMapper.aRespuesta(proyecto));
     }
 
     @PutMapping("/{id}")
     public ProyectoResponse sustituir(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody ProyectoRequest peticion) {
-        return ProyectoMapper.aRespuesta(
-                servicio.reemplazar(id, ProyectoMapper.aModelo(peticion)));
+        return ProyectoMapper.aRespuesta(servicio.sustituir(id, ProyectoMapper.aModelo(peticion)));
     }
 
     @PatchMapping("/{id}")
     public ProyectoResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody ProyectoPatchRequest cambios) {
-        Proyecto modificado = servicio.modificar(
-                id, cambios.nombre(), cambios.descripcion(),
-                cambios.activo(), cambios.numeroDeIncidencias());
-        return ProyectoMapper.aRespuesta(modificado);
+        return ProyectoMapper.aRespuesta(servicio.modificar(id, cambios));
     }
 
     @DeleteMapping("/{id}")
