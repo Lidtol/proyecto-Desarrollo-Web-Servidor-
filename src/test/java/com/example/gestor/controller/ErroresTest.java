@@ -1,7 +1,10 @@
 package com.example.gestor.controller;
 
 import com.example.gestor.error.ManejadorDeErrores;
-import com.example.gestor.model.MemoriaProyecto;
+import com.example.gestor.repository.ProyectoRepositorioEnMemoria;
+import com.example.gestor.repository.TareaRepositorioEnMemoria;
+import com.example.gestor.service.ProyectoService;
+import com.example.gestor.service.TareaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -27,9 +30,10 @@ class ErroresTest {
 
     @BeforeEach
     void setUp() {
-        MemoriaProyecto memoria = new MemoriaProyecto();
+        TareaRepositorioEnMemoria tareas = new TareaRepositorioEnMemoria();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new ProyectoController(memoria), new TareaController(memoria))
+                .standaloneSetup(new ProyectoController(new ProyectoService(new ProyectoRepositorioEnMemoria(), tareas)),
+                        new TareaController(new TareaService(tareas)))
                 .setControllerAdvice(new ManejadorDeErrores())
                 .build();
     }

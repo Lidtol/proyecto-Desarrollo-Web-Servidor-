@@ -4,9 +4,7 @@ import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
 import com.example.gestor.mapper.TareaMapper;
-import com.example.gestor.model.MemoriaProyecto;
 import com.example.gestor.model.Tarea;
-import com.example.gestor.repository.TareaRepository;
 import com.example.gestor.service.TareaService;
 
 import jakarta.validation.Valid;
@@ -32,10 +30,8 @@ public class TareaController {
 
     private final TareaService servicio;
 
-    // Se mantiene el constructor con MemoriaProyecto: Spring lo sigue inyectando
-    // y TareaControllerTest sigue compilando sin tocarlo.
-    public TareaController(MemoriaProyecto memoria) {
-        this.servicio = new TareaService(new TareaRepository(memoria));
+    public TareaController(TareaService servicio) {
+        this.servicio = servicio;
     }
 
     @GetMapping
@@ -46,36 +42,34 @@ public class TareaController {
 
     @GetMapping("/{id}")
     public TareaResponse detalle(@PathVariable(name = "id") int id) {
-        return TareaMapper.aRespuesta(servicio.obtener(id));
+        return TareaMapper.aRespuesta(servicio.buscar(id));
     }
 
     @PostMapping
     public ResponseEntity<TareaResponse> crear(@Valid @RequestBody TareaRequest peticion) {
-        Tarea creada = servicio.crear(TareaMapper.aModelo(peticion));
+        Tarea tarea = servicio.crear(TareaMapper.aModelo(peticion));
 
         URI ubicacion = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(creada.getId())
+                .buildAndExpand(tarea.getId())
                 .toUri();
 
-        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(creada));
+        return ResponseEntity.created(ubicacion).body(TareaMapper.aRespuesta(tarea));
     }
 
     @PutMapping("/{id}")
     public TareaResponse sustituir(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaRequest peticion) {
-        return TareaMapper.aRespuesta(servicio.reemplazar(id, TareaMapper.aModelo(peticion)));
+        return TareaMapper.aRespuesta(servicio.sustituir(id, TareaMapper.aModelo(peticion)));
     }
 
     @PatchMapping("/{id}")
     public TareaResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaPatchRequest cambios) {
-        Tarea modificada = servicio.modificar(
-                id, cambios.titulo(), cambios.prioridad(), cambios.proyectoId(), cambios.completada());
-        return TareaMapper.aRespuesta(modificada);
+        return TareaMapper.aRespuesta(servicio.modificar(id, cambios));
     }
 
     @DeleteMapping("/{id}")

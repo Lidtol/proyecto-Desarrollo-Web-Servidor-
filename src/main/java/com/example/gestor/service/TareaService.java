@@ -1,12 +1,17 @@
 package com.example.gestor.service;
 
+import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.error.RecursoNoEncontradoException;
+import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.model.Tarea;
 import com.example.gestor.repository.TareaRepository;
+
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class TareaService {
 
     private final TareaRepository repositorio;
@@ -15,7 +20,6 @@ public class TareaService {
         this.repositorio = repositorio;
     }
 
-    /** completada == null significa "sin filtrar". */
     public List<Tarea> listar(Boolean completada) {
         List<Tarea> seleccion = new ArrayList<>();
         for (Tarea tarea : repositorio.findAll()) {
@@ -26,7 +30,7 @@ public class TareaService {
         return seleccion;
     }
 
-    public Tarea obtener(int id) {
+    public Tarea buscar(int id) {
         return repositorio.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("tarea", id));
     }
@@ -35,34 +39,18 @@ public class TareaService {
         return repositorio.save(tarea);
     }
 
-    public Tarea reemplazar(int id, Tarea datos) {
-        Tarea existente = obtener(id);
-        existente.setTitulo(datos.getTitulo());
-        existente.setPrioridad(datos.getPrioridad());
-        existente.setProyectoId(datos.getProyectoId());
-        existente.setCompletada(datos.isCompletada());
-        return existente;
+    public Tarea sustituir(int id, Tarea nueva) {
+        buscar(id);
+        nueva.setId(id);
+        return repositorio.save(nueva);
     }
 
-    /** PATCH: un parámetro null significa "no tocar ese campo". Sin DTO: el service no conoce el contrato web. */
-    public Tarea modificar(int id, String titulo, String prioridad, Integer proyectoId, Boolean completada) {
-        Tarea existente = obtener(id);
-        if (titulo != null) {
-            existente.setTitulo(titulo);
-        }
-        if (prioridad != null) {
-            existente.setPrioridad(prioridad);
-        }
-        if (proyectoId != null) {
-            existente.setProyectoId(proyectoId);
-        }
-        if (completada != null) {
-            existente.setCompletada(completada);
-        }
-        return existente;
+    public Tarea modificar(int id, TareaPatchRequest cambios) {
+        Tarea tarea = buscar(id);
+        TareaMapper.aplicarCambios(tarea, cambios);
+        return repositorio.save(tarea);
     }
 
-    /** Idempotente: borrar algo que no existe no es error (el contrato actual responde 204). */
     public void eliminar(int id) {
         repositorio.deleteById(id);
     }
