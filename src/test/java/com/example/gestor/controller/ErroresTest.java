@@ -31,9 +31,10 @@ class ErroresTest {
     @BeforeEach
     void setUp() {
         TareaRepositorioEnMemoria tareas = new TareaRepositorioEnMemoria();
+        ProyectoRepositorioEnMemoria proyectos = new ProyectoRepositorioEnMemoria();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new ProyectoController(new ProyectoService(new ProyectoRepositorioEnMemoria(), tareas)),
-                        new TareaController(new TareaService(tareas)))
+                .standaloneSetup(new ProyectoController(new ProyectoService(proyectos, tareas)),
+                        new TareaController(new TareaService(tareas, proyectos)))
                 .setControllerAdvice(new ManejadorDeErrores())
                 .build();
     }
@@ -106,6 +107,7 @@ class ErroresTest {
 
     @Test
     void prioridadTambienSeValidaEnElPatch() throws Exception {
+        crearProyecto();
         mockMvc.perform(post("/tareas").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"titulo\":\"Comprar\",\"prioridad\":\"alta\",\"proyectoId\":1}"))
                 .andExpect(status().isCreated());
@@ -176,6 +178,25 @@ class ErroresTest {
                 .andExpect(status().isConflict());
         mockMvc.perform(put("/proyectos/2").contentType(MediaType.APPLICATION_JSON).content(PROYECTO_OK))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    void tareaEnProyectoInexistenteDevuelve409() throws Exception {
+        mockMvc.perform(post("/tareas").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Comprar\",\"prioridad\":\"alta\",\"proyectoId\":99}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("No existe el proyecto 99"));
+    }
+
+    @Test
+    void tareaEnProyectoInactivoDevuelve409() throws Exception {
+        mockMvc.perform(post("/proyectos").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Archivado\",\"activo\":false}"))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/tareas").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"titulo\":\"Comprar\",\"prioridad\":\"alta\",\"proyectoId\":1}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("El proyecto 1 está archivado y no admite tareas"));
     }
 
     @Test
