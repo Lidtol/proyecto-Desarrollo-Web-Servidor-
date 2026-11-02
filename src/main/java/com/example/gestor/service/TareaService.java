@@ -1,10 +1,9 @@
 package com.example.gestor.service;
 
-import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.error.RecursoNoEncontradoException;
 import com.example.gestor.error.ReglaDeNegocioException;
-import com.example.gestor.mapper.TareaMapper;
 import com.example.gestor.model.Proyecto;
+import com.example.gestor.model.TareaCambios;
 import com.example.gestor.model.Tarea;
 import com.example.gestor.repository.ProyectoRepository;
 import com.example.gestor.repository.TareaRepository;
@@ -54,12 +53,21 @@ public class TareaService {
         return repositorio.save(nueva);
     }
 
-    public Tarea modificar(int id, TareaPatchRequest cambios) {
+    public Tarea modificar(int id, TareaCambios cambios) {
         Tarea tarea = buscar(id);
         if (cambios.proyectoId() != null) {
             comprobarElProyectoDeLaTarea(cambios.proyectoId(), tarea.getProyectoId());
+            tarea.setProyectoId(cambios.proyectoId());
         }
-        TareaMapper.aplicarCambios(tarea, cambios);
+        if (cambios.titulo() != null) {
+            tarea.setTitulo(cambios.titulo());
+        }
+        if (cambios.prioridad() != null) {
+            tarea.setPrioridad(cambios.prioridad());
+        }
+        if (cambios.completada() != null) {
+            tarea.setCompletada(cambios.completada());
+        }
         return repositorio.save(tarea);
     }
 

@@ -1,9 +1,8 @@
 package com.example.gestor.service;
 
-import com.example.gestor.dto.ProyectoPatchRequest;
 import com.example.gestor.error.ReglaDeNegocioException;
 import com.example.gestor.error.RecursoNoEncontradoException;
-import com.example.gestor.mapper.ProyectoMapper;
+import com.example.gestor.model.ProyectoCambios;
 import com.example.gestor.model.Proyecto;
 import com.example.gestor.model.Tarea;
 import com.example.gestor.repository.ProyectoRepository;
@@ -52,12 +51,21 @@ public class ProyectoService {
         return proyectos.save(nuevo);
     }
 
-    public Proyecto modificar(int id, ProyectoPatchRequest cambios) {
+    public Proyecto modificar(int id, ProyectoCambios cambios) {
         Proyecto proyecto = buscar(id);
         if (cambios.nombre() != null) {
             comprobarNombreLibre(cambios.nombre().trim(), id);
+            proyecto.setNombre(cambios.nombre().trim());
         }
-        ProyectoMapper.aplicarCambios(proyecto, cambios);
+        if (cambios.descripcion() != null) {
+            proyecto.setDescripcion(cambios.descripcion());
+        }
+        if (cambios.activo() != null) {
+            proyecto.setActivo(cambios.activo());
+        }
+        if (cambios.numeroDeIncidencias() != null) {
+            proyecto.setNumeroDeIncidencias(cambios.numeroDeIncidencias());
+        }
         return proyectos.save(proyecto);
     }
 

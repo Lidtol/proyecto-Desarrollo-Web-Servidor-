@@ -3,6 +3,7 @@ package com.example.gestor.mapper;
 import com.example.gestor.dto.ProyectoPatchRequest;
 import com.example.gestor.dto.ProyectoRequest;
 import com.example.gestor.dto.ProyectoResponse;
+import com.example.gestor.model.ProyectoCambios;
 import com.example.gestor.model.Proyecto;
 
 import java.util.ArrayList;
@@ -27,20 +28,12 @@ public final class ProyectoMapper {
         return proyecto;
     }
 
-    /** Aplica solo los campos presentes en el PATCH. */
-    public static void aplicarCambios(Proyecto proyecto, ProyectoPatchRequest cambios) {
-        if (cambios.nombre() != null) {
-            proyecto.setNombre(cambios.nombre().trim());
-        }
-        if (cambios.descripcion() != null) {
-            proyecto.setDescripcion(cambios.descripcion());
-        }
-        if (cambios.activo() != null) {
-            proyecto.setActivo(cambios.activo());
-        }
-        if (cambios.numeroDeIncidencias() != null) {
-            proyecto.setNumeroDeIncidencias(cambios.numeroDeIncidencias());
-        }
+    public static ProyectoCambios aCambios(ProyectoPatchRequest peticion) {
+        return new ProyectoCambios(
+                peticion.nombre(),
+                peticion.descripcion(),
+                peticion.activo(),
+                peticion.numeroDeIncidencias());
     }
 
     public static ProyectoResponse aRespuesta(Proyecto proyecto) {
