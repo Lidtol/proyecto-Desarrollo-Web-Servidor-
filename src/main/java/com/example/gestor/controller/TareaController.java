@@ -69,7 +69,7 @@ public class TareaController {
     public TareaResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody TareaPatchRequest cambios) {
-        return TareaMapper.aRespuesta(servicio.modificar(id, cambios));
+        return TareaMapper.aRespuesta(servicio.modificar(id, TareaMapper.aCambios(cambios)));
     }
 
     @DeleteMapping("/{id}")

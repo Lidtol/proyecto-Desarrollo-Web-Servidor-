@@ -1,8 +1,8 @@
 package com.example.gestor.service;
 
-import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.error.ReglaDeNegocioException;
 import com.example.gestor.model.Proyecto;
+import com.example.gestor.model.TareaCambios;
 import com.example.gestor.model.Tarea;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -104,7 +104,7 @@ class TareaServiceTest {
         proyectos.con(proyecto(1, "Activo", true));
         TareaService servicio = new TareaService(new TareaRepositorioFalso(), proyectos);
         Tarea creada = servicio.crear(tarea(1));
-        TareaPatchRequest cambios = new TareaPatchRequest(null, null, 50, null);
+        TareaCambios cambios = new TareaCambios(null, null, 50, null);
 
         ReglaDeNegocioException error = assertThrows(ReglaDeNegocioException.class,
                 () -> servicio.modificar(creada.getId(), cambios));
@@ -124,7 +124,7 @@ class TareaServiceTest {
         proyecto.setActivo(false); // el proyecto se archiva después
 
         Tarea modificada = servicio.modificar(creada.getId(),
-                new TareaPatchRequest(null, null, null, true));
+            new TareaCambios(null, null, null, true));
 
         assertTrue(modificada.isCompletada());
     }

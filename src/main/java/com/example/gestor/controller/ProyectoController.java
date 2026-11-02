@@ -71,7 +71,7 @@ public class ProyectoController {
     public ProyectoResponse modificar(
             @PathVariable(name = "id") int id,
             @Valid @RequestBody ProyectoPatchRequest cambios) {
-        return ProyectoMapper.aRespuesta(servicio.modificar(id, cambios));
+        return ProyectoMapper.aRespuesta(servicio.modificar(id, ProyectoMapper.aCambios(cambios)));
     }
 
     @DeleteMapping("/{id}")

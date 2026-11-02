@@ -3,6 +3,7 @@ package com.example.gestor.mapper;
 import com.example.gestor.dto.TareaPatchRequest;
 import com.example.gestor.dto.TareaRequest;
 import com.example.gestor.dto.TareaResponse;
+import com.example.gestor.model.TareaCambios;
 import com.example.gestor.model.Tarea;
 
 import java.util.ArrayList;
@@ -24,20 +25,12 @@ public final class TareaMapper {
         return tarea;
     }
 
-    /** Aplica solo los campos presentes en el PATCH. */
-    public static void aplicarCambios(Tarea tarea, TareaPatchRequest cambios) {
-        if (cambios.titulo() != null) {
-            tarea.setTitulo(cambios.titulo());
-        }
-        if (cambios.prioridad() != null) {
-            tarea.setPrioridad(cambios.prioridad());
-        }
-        if (cambios.proyectoId() != null) {
-            tarea.setProyectoId(cambios.proyectoId());
-        }
-        if (cambios.completada() != null) {
-            tarea.setCompletada(cambios.completada());
-        }
+    public static TareaCambios aCambios(TareaPatchRequest peticion) {
+        return new TareaCambios(
+                peticion.titulo(),
+                peticion.prioridad(),
+                peticion.proyectoId(),
+                peticion.completada());
     }
 
     public static TareaResponse aRespuesta(Tarea tarea) {
